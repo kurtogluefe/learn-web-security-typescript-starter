@@ -18,13 +18,13 @@ export function parseReviewBody(value: unknown): string | undefined {
   if (typeof value !== "string") {
     return undefined;
   }
-
-  const bodyLength = value.length;
+  const trimmedVal = value.trim();
+  const bodyLength = trimmedVal.length;
   if (bodyLength < 1 || bodyLength > MAX_REVIEW_BODY_LENGTH) {
     return undefined;
   }
 
-  return value;
+  return trimmedVal;
 }
 
 export function listReviewsForProduct(

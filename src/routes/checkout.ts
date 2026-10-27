@@ -22,6 +22,7 @@ import {
   findOrderById,
   InsufficientInventoryError,
 } from "../orders/index.ts";
+import { csrfTokensMatch } from "../csrf.ts";
 
 export function sendFulfillmentTimeout(
   response: Response,
@@ -80,6 +81,15 @@ export function createCheckoutRouter(deps: Dependencies): Router {
     if (!current) {
       return;
     }
+    if (!csrfTokensMatch(current.session.csrf_token, req.body?.csrfToken)) {
+      sendErrorPage(
+        res,
+        403,
+        "Forbidden",
+        "Your request could not be verified.",
+      );
+      return;
+    }
 
     let items = listCartItems(db, current.user.id);
     if (items.length === 0) {
@@ -108,7 +118,6 @@ export function createCheckoutRouter(deps: Dependencies): Router {
     const shippingCity = String(req.body.shippingCity ?? "").trim();
     const shippingRegion = String(req.body.shippingRegion ?? "").trim();
     const shippingPostalCode = String(req.body.shippingPostalCode ?? "").trim();
-    const discountCents = Number(req.body.discountCents ?? 0);
 
     if (
       !shippingName ||
@@ -171,7 +180,6 @@ export function createCheckoutRouter(deps: Dependencies): Router {
         db,
         current.user.id,
         items,
-        discountCents,
         shippingDetails,
         adminNotes,
         deps.keyring,
@@ -196,7 +204,7 @@ export function createCheckoutRouter(deps: Dependencies): Router {
       return;
     }
 
-    const pawPalReference = createPawPalReference(order.id, order.total_cents);
+    const pawPalReference = createPawPalReference(order.id, order.total_cents, deps.pawPalApiKey);
 
     logEvent("checkout_started", {
       userId: current.user.id,

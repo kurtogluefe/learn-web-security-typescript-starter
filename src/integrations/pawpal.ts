@@ -1,10 +1,10 @@
 import { createHmac } from "node:crypto";
 
-const pawPalApiKey = "pawpal_test_insecure_hardcoded_key";
 
 export function createPawPalReference(
   orderId: number,
   totalCents: number,
+  pawPalApiKey: string,
 ): string {
   const payload = `${orderId}:${totalCents}`;
   const signature = createHmac("sha256", pawPalApiKey)

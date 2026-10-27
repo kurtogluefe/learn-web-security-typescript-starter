@@ -47,7 +47,6 @@ export function renderCheckoutPage(
           <h2>Shipping</h2>
           <form method="post" action="/checkout" class="checkout-form">
             <input name="csrfToken" type="hidden" value="${escapeHtml(csrfToken)}">
-            <input name="discountCents" type="hidden" value="0">
             <label>Name<input name="shippingName" type="text" autocomplete="name" required></label>
             <label>Street address<input name="shippingAddress" type="text" autocomplete="street-address" required></label>
             <label>City<input name="shippingCity" type="text" autocomplete="address-level2" required></label>
@@ -63,7 +62,7 @@ export function renderCheckoutPage(
         <article class="card">
           <h2>Delivery Estimate</h2>
           <p>Check when Acorn Express can deliver your new friend.</p>
-          <iframe class="shipping-widget" src="/shipping-widget.html" title="Acorn Express shipping estimate"></iframe>
+          <iframe class="shipping-widget" src="/shipping-widget.html" sandbox="allow-scripts" title="Acorn Express shipping estimate"></iframe>
         </article>
       </section>`,
   );
