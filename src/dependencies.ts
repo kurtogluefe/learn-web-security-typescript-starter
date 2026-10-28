@@ -16,6 +16,7 @@ export type Dependencies = {
   keyring: Keyring | undefined;
   db: DatabaseSync;
   pawPalApiKey: string;
+  trustedProxyHops: number;
 };
 
 function parseNonNegativeInteger(value: string, name: string): number {
@@ -34,6 +35,7 @@ export function initDependencies(
   if (port > 65_535) {
     throw new Error("PORT must be no greater than 65535");
   }
+  const trustedProxyHops = parseNonNegativeInteger(env.TRUST_PROXY_HOPS ?? "0", "TRUST_PROXY_HOPS");
 
   const acornFulfillmentDelayMs = Number(env.ACORN_FULFILLMENT_DELAY_MS ?? "0");
   if (
@@ -60,7 +62,7 @@ export function initDependencies(
     keyring: loadOptionalKeyring(env),
   };
   const pawPalApiKey = requireEnv("PAWPAL_API_KEY");
-  return { ...values, db: openDatabase(values.databasePath), pawPalApiKey};
+  return { ...values, db: openDatabase(values.databasePath), pawPalApiKey, trustedProxyHops};
 }
 
 
