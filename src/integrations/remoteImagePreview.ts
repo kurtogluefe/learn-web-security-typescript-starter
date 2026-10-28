@@ -15,9 +15,14 @@ export async function fetchRemoteImagePreview(
   fetchImpl: typeof fetch = fetch,
 ): Promise<RemoteImagePreviewResult> {
   let response: Response;
+  
+  const parsedUrl = parseAllowedImageUrl(imageUrl);
+  if (!parsedUrl) {throw new RemoteImagePreviewError("Use an HTTPS URL from an allowed image host.")}
+  
   try {
-    response = await fetchImpl(imageUrl, {
+    response = await fetchImpl(parsedUrl, {
       signal: AbortSignal.timeout(5_000),
+      redirect: "manual",
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "TimeoutError") {
@@ -28,6 +33,9 @@ export async function fetchRemoteImagePreview(
     throw new RemoteImagePreviewError("The image host could not be reached.");
   }
 
+  if (300 <= response.status && response.status <= 399) {throw new RemoteImagePreviewError("Image URL redirects are not allowed.")}
+  
+  
   if (!response.ok) {
     throw new RemoteImagePreviewError(
       `The image host returned HTTP ${response.status}.`,
@@ -57,7 +65,7 @@ export async function fetchRemoteImagePreview(
   }
 
   return {
-    requestedUrl: imageUrl,
+    requestedUrl: parsedUrl.href,
     finalUrl: response.url,
     status: response.status,
     contentType: detectedContentType,
@@ -126,3 +134,23 @@ function detectImageContentType(imageBytes: Buffer): string | undefined {
 
   return undefined;
 }
+
+const ALLOWED_IMAGE_ORIGINS = new Set([
+  "https://storage.googleapis.com",
+]);
+
+
+function parseAllowedImageUrl(rawUrl: string): URL | undefined {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return undefined;
+  }
+
+  if (url.protocol !== "https:") return undefined;
+  if (url.username || url.password) return undefined;
+  if (!ALLOWED_IMAGE_ORIGINS.has(url.origin)) return undefined;
+  return url;
+}
+

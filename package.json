@@ -11,7 +11,7 @@
     "format": "oxfmt",
     "lint": "oxfmt --check && oxlint",
     "lint:fix": "npm run format && oxlint --fix",
-    "start": "node src/main.ts --env-file-if-exists=.env",
+    "start": "node --env-file-if-exists=.env src/main.ts",
     "typecheck": "tsc"
   },
   "dependencies": {
