@@ -1,8 +1,7 @@
-import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { openDatabase } from "./db/index.ts";
-import { loadOptionalKeyring, type Keyring } from "./storage/keyring.ts";
+import { loadKeyring, type Keyring } from "./storage/keyring.ts";
 
 export type Dependencies = {
   appOrigin: string;
@@ -59,7 +58,7 @@ export function initDependencies(
     maxUploadBytes: 1024 * 1024,
     maxPublicProductResults: 50,
     downloadSigningKey: downloadSigningKey,
-    keyring: loadOptionalKeyring(env),
+    keyring: loadKeyring(env),
   };
   const pawPalApiKey = requireEnv("PAWPAL_API_KEY");
   return { ...values, db: openDatabase(values.databasePath), pawPalApiKey, trustedProxyHops};

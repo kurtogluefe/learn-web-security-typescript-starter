@@ -7,5 +7,4 @@ coverage/
 **/*.sqlite*
 data/bulk-tax-documents/
 data/uploads/*
-!data/uploads/mystery-shack-tax-exemption.pdf
 dist/
