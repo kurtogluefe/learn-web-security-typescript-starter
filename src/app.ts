@@ -23,6 +23,7 @@ import { createSupportRouter } from "./routes/support.ts";
 import { migrateSensitiveDataAtRest } from "./storage/migrations.ts";
 import cors from "cors";
 import helmet from "helmet";
+import { createRateLimiter } from "./security/rateLimit.ts";
 
 export function createApp(deps: Dependencies): express.Express {
   migrateSensitiveDataAtRest(deps.db, deps.keyring);
@@ -34,6 +35,9 @@ export function createApp(deps: Dependencies): express.Express {
     res.locals.cspNonce = cspNonce;
     next();
   });
+
+  const globalLimiter = createRateLimiter({windowSeconds: 60, max: 100,});
+  const productApiLimiter = createRateLimiter({windowSeconds: 60, max: 30,});
   
   app.use(
     helmet({
@@ -62,10 +66,16 @@ export function createApp(deps: Dependencies): express.Express {
       next();
     },
   );
-
+  
   app.get("/health", (_req, res) => {
     res.json({ ok: true, app: "bearly-secure" });
   });
+  
+  ///////////////////////
+  app.use(globalLimiter);
+  ///////////////////////
+  
+  
   app.use(express.static("public"));
   app.use(
     "/vendor/simplewebauthn",
@@ -79,6 +89,7 @@ export function createApp(deps: Dependencies): express.Express {
   
   app.use(
     "/api/products",
+    productApiLimiter,
     cors({
       origin: "*",
       credentials: false,
@@ -104,6 +115,7 @@ export function createApp(deps: Dependencies): express.Express {
   app.use(createSupportRouter(deps));
   app.use(createAdminRouter(deps));
   app.use(createStorefrontRouter(deps));
+
 
   app.use((_req, res) => {
     sendErrorPage(
